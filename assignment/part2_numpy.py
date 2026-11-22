@@ -19,8 +19,7 @@ import numpy as np
 
 def to_array(values):
     """Convert a Python list (or list of lists) to a NumPy array of dtype float64."""
-    # TODO: implement
-    raise NotImplementedError
+    return np.array(values, dtype=np.float64)
 
 
 def summary_stats(arr):
@@ -29,8 +28,14 @@ def summary_stats(arr):
     - Use the *population* standard deviation (NumPy's default, ddof=0).
     - Every value must be a plain Python ``float`` rounded to 2 decimals.
     """
-    # TODO: implement
-    raise NotImplementedError
+    return {
+        "mean": round(float(np.mean(arr)),2),
+        "median": round(float(np.median(arr)),2),
+        "std": round(float(np.std(arr)),2),
+        "min": round(float(np.min(arr)),2),
+        "max": round(float(np.max(arr)),2),
+        
+    }
 
 
 def min_max_scale(arr):
@@ -39,14 +44,16 @@ def min_max_scale(arr):
     If all values are identical (max == min) return an array of zeros
     with the same shape.
     """
-    # TODO: implement
-    raise NotImplementedError
+    min_scale = np.min(arr)
+    max_scale = np.max(arr)
+    if min_scale == max_scale:
+        return np.zeros_like(arr,dtype=np.float64)
+    return (arr - min_scale)/ (max_scale - min_scale)
 
 
 def z_scores(arr):
     """Standardise values:  (x - mean) / std   (population std, ddof=0)."""
-    # TODO: implement
-    raise NotImplementedError
+    return (arr - np.mean(arr)) / np.std(arr,ddof=0)
 
 
 def filter_above(arr, threshold):
@@ -54,14 +61,13 @@ def filter_above(arr, threshold):
 
     Use a boolean mask, e.g. ``arr[arr > threshold]``.
     """
-    # TODO: implement
-    raise NotImplementedError
+    return arr[arr>threshold]
 
 
 def count_in_range(arr, low, high):
     """Return (as an int) how many values satisfy  low <= x <= high."""
-    # TODO: implement
-    raise NotImplementedError
+    count= (arr >= low) & (arr <= high)
+    return int(np.sum(count))
 
 
 def daily_change(arr):
@@ -69,20 +75,17 @@ def daily_change(arr):
 
     The result has one fewer element than the input. Hint: slicing or np.diff.
     """
-    # TODO: implement
-    raise NotImplementedError
+    return np.diff(arr)
 
 
 def column_means(matrix):
     """Return the mean of each COLUMN of a 2-D array (a 1-D array)."""
-    # TODO: implement
-    raise NotImplementedError
+    return np.mean(matrix,axis=0)
 
 
 def row_totals(matrix):
     """Return the sum of each ROW of a 2-D array (a 1-D array)."""
-    # TODO: implement
-    raise NotImplementedError
+    return np.sum(matrix,axis=1)
 
 
 def top_student(matrix, names):
@@ -90,9 +93,9 @@ def top_student(matrix, names):
 
     ``names[i]`` is the name for ``matrix[i]``. Hint: np.argmax.
     """
-    # TODO: implement
-    raise NotImplementedError
-
+    average_scores= np.mean(matrix,axis=1)
+    highest_average= int(np.argmax(average_scores))
+    return names[highest_average]
 
 if __name__ == "__main__":
     temps = to_array([24.5, 26.1, 27.8, 25.0, 29.4, 31.2, 30.0])

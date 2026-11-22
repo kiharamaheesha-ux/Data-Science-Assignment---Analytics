@@ -25,7 +25,7 @@ from assignment.paths import INVENTORY_JSON, OUTPUT_DIR
 
 
 def load_inventory(path=INVENTORY_JSON):
-    """Read the inventory JSON file and return it as a Python dict.
+     """Read the inventory JSON file and return it as a Python dict.
 
     Requirements
     - Use a ``with`` block to open the file.
@@ -37,8 +37,14 @@ def load_inventory(path=INVENTORY_JSON):
     >>> data["store"]
     'Makola Gadgets'
     """
-    # TODO: implement
-    raise NotImplementedError
+     file_path = Path(path) #Checking if the file exists
+        
+     if not file_path.exists():
+          raise FileNotFoundError(f"Inventory file path is not found at {file_path}")
+     
+     with open(file_path, "r") as file:
+         return json.load(file)
+ 
 
 
 def safe_float(value, default=None):
@@ -54,8 +60,11 @@ def safe_float(value, default=None):
     >>> safe_float(None, default=0.0)
     0.0
     """
-    # TODO: implement
-    raise NotImplementedError
+
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default 
 
 
 def average_rating(ratings):
@@ -68,8 +77,12 @@ def average_rating(ratings):
     >>> average_rating([]) is None
     True
     """
-    # TODO: implement
-    raise NotImplementedError
+
+    if not ratings:
+        return None
+
+    mean = sum(ratings) / len(ratings)
+    return round(mean,2)
 
 
 def clean_products(products):
@@ -82,8 +95,25 @@ def clean_products(products):
     - ``stock``: int, or ``None`` if it cannot be converted
     - ``avg_rating``: result of ``average_rating(product["ratings"])``
     """
-    # TODO: implement
-    raise NotImplementedError
+    cleaned_list = []
+
+    for product in products:
+        try:
+            stock = int(product.get("stock"))
+        except (ValueError,TypeError):
+            stock = None
+
+        cleaned_item = {
+            "sku":product["sku"],
+            "name":product["name"],
+            "category":product["category"],
+            "price": safe_float(product.get("price")),
+            "stock": stock,
+            "avg_rating" :average_rating(product.get("ratings", []))
+        }
+        cleaned_list.append(cleaned_item)
+
+    return cleaned_list
 
 
 def inventory_value(products):
@@ -92,8 +122,17 @@ def inventory_value(products):
     ``products`` is a list of CLEANED products. Skip any product whose price
     or stock is ``None``. Round the result to 2 decimal places.
     """
-    # TODO: implement
-    raise NotImplementedError
+    total = 0.0
+
+    for product in products:
+        price = product["price"]
+        stock = product["stock"]
+
+        if price is not None and stock is not None:
+            total += price * stock 
+
+    return round(total , 2) 
+
 
 
 def products_by_category(products):
@@ -105,8 +144,21 @@ def products_by_category(products):
     ...                       {"name": "A", "category": "X"}])
     {'X': ['A', 'B']}
     """
-    # TODO: implement
-    raise NotImplementedError
+    grouped = {}
+
+    for product in products:
+            category = product["category"]
+            name = product["name"]
+
+            if category not in grouped:
+                grouped[category] = []
+
+            grouped[category].append(name)
+
+    for names in grouped.values():
+        names.sort()
+
+    return grouped
 
 
 def low_stock(products, threshold=10):
@@ -114,8 +166,15 @@ def low_stock(products, threshold=10):
 
     Products with ``stock`` of ``None`` are NOT low stock — they are unknown.
     """
-    # TODO: implement
-    raise NotImplementedError
+    low_skus = []
+
+    for product in products:
+        stock = product["stock"]
+
+        if stock is not None and stock <threshold:
+            low_skus.append(product["sku"])
+
+    return sorted(low_skus)
 
 
 def write_summary_csv(products, path=OUTPUT_DIR / "inventory_summary.csv"):
@@ -126,8 +185,16 @@ def write_summary_csv(products, path=OUTPUT_DIR / "inventory_summary.csv"):
     - Create the parent folder if it does not exist.
     - Return the path as a ``pathlib.Path``.
     """
-    # TODO: implement
-    raise NotImplementedError
+    file_path = Path(path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = ["sku", "name", "category", "price","stock","avg_rating"]
+
+    with open(file_path,"w", newline="") as file:
+        writter = csv.DictWriter(file, fieldnames=fieldnames)
+        writter.writeheader()
+        writter.writerows(products)
+
+    return file_path
 
 
 if __name__ == "__main__":
