@@ -20,6 +20,7 @@ import pandas as pd  # noqa: F401  (you will need this)
 from assignment.paths import SALES_CSV
 
 
+
 def load_sales(path=SALES_CSV):
     """Load the sales CSV into a DataFrame.
 
@@ -27,8 +28,9 @@ def load_sales(path=SALES_CSV):
     a proper datetime column (hint: ``pd.to_datetime(..., dayfirst=True)``
     or ``format="%d/%m/%Y"``).
     """
-    # TODO: implement
-    raise NotImplementedError
+    df = pd.read_csv(path)
+    df["Date"] = pd.to_datetime(df["Date"], dayfirst=True)
+    return df
 
 
 def dataset_overview(df):
@@ -44,14 +46,20 @@ def dataset_overview(df):
     ``df.select_dtypes(include=["object", "string"])``. The datetime ``Date``
     column should appear in NEITHER list.
     """
-    # TODO: implement
-    raise NotImplementedError
+    return{
+        "rows" : int(df.shape[0]),
+        "columns" : int(df.shape[1]),
+        "missing_total" : int(df.isnull().sum().sum()),
+        "numeric_columns" : df.select_dtypes(include="number").columns.tolist(),
+        "categorical_columns" : df.select_dtypes(
+            include=["object" ,"string"]
+        ).columns.tolist()
+    }
 
 
 def revenue_by_country(df):
     """Total Revenue per Country as a Series, sorted from highest to lowest."""
-    # TODO: implement
-    raise NotImplementedError
+    return df.groupby("Country")["Revenue"].sum().sort_values(ascending=False)
 
 
 def top_products_by_profit(df, n=5):
@@ -59,8 +67,8 @@ def top_products_by_profit(df, n=5):
 
     Result: a Series indexed by Product, sorted descending, length ``n``.
     """
-    # TODO: implement
-    raise NotImplementedError
+    return (df.groupby("Product")["Profit"].sum().sort_values(ascending=False).head(n)
+    )
 
 
 def monthly_revenue(df, year):
@@ -70,8 +78,12 @@ def monthly_revenue(df, year):
     - Return a Series indexed by month NUMBER 1..12 (all 12 months present;
       fill months with no sales with 0).
     """
-    # TODO: implement
-    raise NotImplementedError
+    return(
+        df[df["Date"].dt.year == year]
+        .groupby(df["Date"].dt.month)["Revenue"]
+        .sum()
+        .reindex(range(1,13), fill_value=0)
+    )
 
 
 def category_summary(df):
@@ -84,8 +96,15 @@ def category_summary(df):
         margin   — profit / revenue * 100, rounded to 2 decimals
     sorted by ``revenue`` descending.
     """
-    # TODO: implement
-    raise NotImplementedError
+    pc = df.groupby("Product_Category")
+    summary = pd.DataFrame({
+        "orders": pc.size(),
+        "revenue" : pc["Revenue"].sum(),
+        "profit" : pc["Profit"].sum(),
+    })
+    summary["margin"]=(summary["profit"] / summary["revenue"] * 100).round(2)
+    return summary.sort_values("revenue", ascending=False)
+    
 
 
 def high_value_orders(df, min_revenue=2000, country=None):
@@ -94,8 +113,10 @@ def high_value_orders(df, min_revenue=2000, country=None):
     If ``country`` is given, also keep only orders from that country.
     Return the filtered DataFrame (keep the original index).
     """
-    # TODO: implement
-    raise NotImplementedError
+    hv = df["Revenue"] >= min_revenue
+    if country is not None:
+        hv = hv & (df["Country"] == country)
+    return df[hv]
 
 
 def describe_column(series):
@@ -109,15 +130,35 @@ def describe_column(series):
       percentiles).
     - Every value must be a Python float rounded to 2 decimals.
     """
-    # TODO: implement
-    raise NotImplementedError
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+
+    stats = {
+        "mean": series.mean(),
+        "median":series.median(),
+        "mode":series.mode(0),
+        "range":series.max() - series.min(),
+        "variance":series.var(),
+        "std":series.std(),
+        "q1":q1,
+        "q3":q3,
+        "iqr":q3-q1,
+        "skew": series.skew()
+
+    }
+    return {k: round(float(v),2) for k, v in stats.items()}
 
 
 def skew_direction(series):
     """Return "right-skewed" if skew > 0.5, "left-skewed" if skew < -0.5,
     otherwise "approximately symmetric"."""
-    # TODO: implement
-    raise NotImplementedError
+    sk = series.skew()
+    if sk > 0.5:
+        return "right-skewed"
+    elif sk < -0.5:
+        return "left-skewed"
+    return "approximately symmetric"
+  
 
 
 if __name__ == "__main__":
